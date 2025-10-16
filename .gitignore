@@ -8,10 +8,6 @@ venv/
 env/
 ENV/
 
-# Generated proto files
-*_pb2.py
-*_pb2_grpc.py
-
 # IDE
 .vscode/
 .idea/
