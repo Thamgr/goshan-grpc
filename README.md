@@ -1,6 +1,6 @@
 # Goshan gRPC Server
 
-Минимальный gRPC сервер с синглтоном GoshanBrain для принятия решений.
+Минимальный асинхронный gRPC сервер на базе `grpclib` с синглтоном GoshanBrain для принятия решений.
 
 ## Установка
 
@@ -14,18 +14,24 @@ pip install -r requirements.txt
 
 ## Генерация Python кода из proto файла
 
+Для `grpclib` используется специальный плагин генерации:
+
 ```bash
 source venv/bin/activate
-python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. gamebot.proto
+python -m grpc_tools.protoc -I. --python_out=. --grpclib_python_out=. gamebot.proto
 ```
 
 Или используя прямой путь:
 
 ```bash
-./venv/bin/python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. gamebot.proto
+./venv/bin/python -m grpc_tools.protoc -I. --python_out=. --grpclib_python_out=. gamebot.proto
 ```
 
-*Примечание: Файлы `gamebot_pb2.py` и `gamebot_pb2_grpc.py` уже сгенерированы.*
+Это сгенерирует два файла:
+- `gamebot_pb2.py` - классы для proto сообщений
+- `gamebot_grpc.py` - классы для gRPC сервиса (для grpclib)
+
+*Примечание: Перед генерацией убедитесь, что установлен пакет `grpcio-tools`.*
 
 ## Запуск сервера
 
@@ -77,13 +83,13 @@ python client.py
 
 ### Основные файлы:
 - **gamebot.proto** - определение gRPC сервиса
-- **goshan_brain.py** - синглтон класс GoshanBrain с методом process(), возвращающим рандомно 0 или 1
-- **server.py** - gRPC сервер, который на каждый запрос обращается к GoshanBrain
-- **client.py** - пример клиента для тестирования
+- **goshan_brain.py** - асинхронный синглтон класс GoshanBrain с методом process(), возвращающим рандомно 0 или 1
+- **server.py** - асинхронный gRPC сервер на базе `grpclib`, который на каждый запрос обращается к GoshanBrain
+- **client.py** - пример асинхронного клиента для тестирования
 
 ### Сгенерированные файлы:
 - **gamebot_pb2.py** - сгенерированные Python классы для proto сообщений
-- **gamebot_pb2_grpc.py** - сгенерированные Python классы для gRPC сервиса
+- **gamebot_grpc.py** - сгенерированные Python классы для gRPC сервиса (grpclib)
 
 ### Вспомогательные файлы:
 - **run_server.sh** - скрипт для быстрого запуска сервера

@@ -1,3 +1,4 @@
-grpcio==1.60.0
+grpclib==0.4.7
+protobuf==4.25.8
 grpcio-tools==1.60.0
 

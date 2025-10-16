@@ -1,20 +1,24 @@
-import grpc
-from concurrent import futures
+import asyncio
+from grpclib.server import Server
+from grpclib.utils import graceful_exit
 import gamebot_pb2
-import gamebot_pb2_grpc
+import gamebot_grpc
 from goshan_brain import GoshanBrain
 
 
-class GameBotServicer(gamebot_pb2_grpc.GameBotServicer):
+class GameBotService(gamebot_grpc.GameBotBase):
     """Реализация gRPC сервиса GameBot"""
     
     def __init__(self):
         self.brain = GoshanBrain()
     
-    def SendAction(self, request, context):
+    async def SendAction(self, stream):
         """Обрабатывает запрос Action и возвращает ActionResponse"""
+        # Получаем запрос
+        request = await stream.recv_message()
+        
         # Получаем решение от GoshanBrain
-        decision = self.brain.process()
+        decision = await self.brain.process()
         
         # Формируем ответ
         response = gamebot_pb2.ActionResponse(
@@ -24,27 +28,23 @@ class GameBotServicer(gamebot_pb2_grpc.GameBotServicer):
         print(f"Получен запрос: x={request.x}, y={request.y}, duration={request.duration}")
         print(f"Решение GoshanBrain: {decision}")
         
-        return response
+        # Отправляем ответ
+        await stream.send_message(response)
 
 
-def serve():
+async def serve():
     """Запуск gRPC сервера"""
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    gamebot_pb2_grpc.add_GameBotServicer_to_server(GameBotServicer(), server)
+    server = Server([GameBotService()])
     
-    port = "50051"
-    server.add_insecure_port(f"[::]:{port}")
-    server.start()
+    port = 50051
     
-    print(f"gRPC сервер запущен на порту {port}")
-    
-    try:
-        server.wait_for_termination()
-    except KeyboardInterrupt:
-        print("\nОстановка сервера...")
-        server.stop(0)
+    # graceful_exit добавляет обработку сигналов для корректной остановки
+    with graceful_exit([server]):
+        await server.start("0.0.0.0", port)
+        print(f"gRPC сервер запущен на порту {port}")
+        await server.wait_closed()
 
 
 if __name__ == "__main__":
-    serve()
+    asyncio.run(serve())
 
